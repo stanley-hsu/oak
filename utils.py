@@ -12,9 +12,3 @@ def clickOK(label_cmd, label_info, input_cmd, input_server, radio_protocol):
     protocol = radio_protocol.get()
     label_cmd.configure(text="Command: " + command)
     label_info.configure(text="Send to " + server + " via " + protocol)
-
-def sel(label, input, selected):
-    info = selected.get()
-    print info
-    server = input.get("1.0", "end-1c")
-    label.configure(text="Send to " + server + " via " + info)

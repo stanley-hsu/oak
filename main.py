@@ -1,57 +1,131 @@
-import Tkinter as tk
-import utils
+# Simple enough, just import everything from tkinter.
+from tkinter import *
+from tkinter import filedialog
+from tkinter import ttk
+import configparser
+import tkMessageBox
 
-root=tk.Tk()
-root.title("My First Tk GUI")
-#root.resizable(0,0)
-#root.geometry("400x400")
+class Window(Frame):
+	server = ""
+	protocol = ""
+	cmd_list = ["help"]
+	cmd_list_max_size = 5
 
-# ---------------------------------------------------------- #
-# UI Component                                               #
-# ---------------------------------------------------------- #
-label_server=tk.Label(root, text="Server: ")
-label_protocol=tk.Label(root, text="Protocol: ")
-label_cmd=tk.Label(root, text="Command: <input in following text box>")
-label_log_display=tk.Label(root, text="Log: ")
-label_info=tk.Label(root, text="<Target>")
+	# Define settings upon initialization. Here you can specify
+	def __init__(self, master=None):
+		# parameters that you want to send through the Frame class.
+		Frame.__init__(self, master)
 
-textbox_server = tk.Text(root,height=1, width=20, background="yellow")
-textbox_output = tk.Text(root,height=20)
-textbox_cmd = tk.Text(root,height=1, background="yellow")
+		#reference to the master widget, which is the tk window
+		self.master = master
+		
+		frame1= Frame(master)
+		frame2= Frame(master)
+		frame3= Frame(master)
+		frame4= Frame(master)
+		frame1.pack();
+		frame2.pack(fill=BOTH);
+		frame3.pack(fill=BOTH, expand=1);
+		frame4.pack(fill=BOTH, side=BOTTOM);
 
-scrollbar=tk.Scrollbar(root, orient=tk.VERTICAL)
+		self.init_menu(frame1)
+		self.init_label(frame2)
+		self.init_textbox_output(frame3)
+		self.init_combobox_cmd(frame4)
 
-protocol = tk.StringVar()
-radio_ssh = tk.Radiobutton(root, text="SSH", variable=protocol, value="SSH")
-radio_com = tk.Radiobutton(root, text="COM", variable=protocol, value="COM")
-radio_ssh.select();
+	def init_menu(self, frame):
 
-button_Submit=tk.Button(root, text="Submit")
+		# changing the title of our master widget
+		self.master.title("UR Tool")
+		
+		# creating a menu instance
+		menu = Menu(self.master)
+		self.master.config(menu=menu)
+		
+		# create the file object)
+		file = Menu(menu, tearoff=0)
+		file.add_command(label="Open config file", command=self.file_open)
+		file.add_command(label="Exit", command=self.client_exit)
+		
+		# create the file object)
+		help = Menu(menu, tearoff=0)
+		help.add_command(label="About", command=self.show_about)
+		
+		#added "file" to our menu
+		menu.add_cascade(label="File", menu=file)
+		#added "help" to our menu
+		menu.add_cascade(label="Help", menu=help)
+		
+	def init_label(self, frame):
+		self.label_cmd = Label(frame, text="Command: ")
+		self.label_cmd.pack(side=LEFT)
 
-# Set default value
-textbox_server.insert(tk.END, "192.168.1.1")
-# ---------------------------------------------------------- #
-# Action                                                     #
-# ---------------------------------------------------------- #
-button_Submit.configure(command=lambda: utils.clickOK(label_cmd, label_info, textbox_cmd, textbox_server, protocol))
-scrollbar.config(command=textbox_output.yview)
-textbox_output.configure(yscrollcommand=scrollbar.set)
+	def init_textbox_output(self, frame):
+		
+		self.textbox_output = Text(frame)
+		
+		scroll = Scrollbar(frame, command=self.textbox_output.yview, orient=VERTICAL )
+		scroll.pack(side=RIGHT, fill=BOTH)
+		
+		self.textbox_output.configure(yscrollcommand=scroll.set)
+		self.textbox_output.pack(side=LEFT,fill=BOTH, expand=1, padx=2)
+	
+	def init_combobox_cmd(self, frame):
+		self.cmd = StringVar()
+		combobox_cmd = ttk.Combobox(frame, textvariable=self.cmd, values=self.cmd_list)
+		#combobox_cmd["values"] = ("help")
+		combobox_cmd.current(0)
+		combobox_cmd.pack(side=LEFT, fill=X, expand=1, padx=2)
+		
+		button_Submit=Button(frame, text="Submit", command=lambda: self.click_submit(combobox_cmd))
+		button_Submit.pack(side=RIGHT, padx=2)
+		
+	def client_exit(self):
+		exit()
 
-# ---------------------------------------------------------- #
-# Layout                                                     #
-# ---------------------------------------------------------- #
-label_server.grid(row=1,column=0, sticky=tk.W)
-textbox_server.grid(row=2,column=0,sticky=tk.W)
-label_protocol.grid(row=3,column=0, sticky=tk.W)
-radio_ssh.grid(row=4,column=0, sticky=tk.W)
-radio_com.grid(row=5,column=0, sticky=tk.W)
-label_log_display.grid(row=6,column=0,sticky=tk.W)
-textbox_output.grid(row=7,column=0)
-scrollbar.grid(row=7,column=1,sticky=tk.N+tk.S+tk.W)
+	def file_open(self):
+		root.filename = filedialog.askopenfilename(initialdir = ".",title = "Select file", filetypes=( ("Config file", "*.ini*"),("All types", "*.*")))
+        
+		# read config file
+		config = configparser.ConfigParser()
+		config.read(root.filename)
+		
+		self.server = config["GENERAL"]["SERVER"]
+		self.protocol = config["GENERAL"]["PROTOCOL"]
+		
+		self.master.title("UR Tool - " + self.server + " (" + self.protocol + ")")
 
-label_cmd.grid(row=8,column=0,sticky=tk.W)
-textbox_cmd.grid(row=10,column=0)
-button_Submit.grid(row=10,column=1)
-label_info.grid(row=9,column=0,sticky=tk.W)
+	def show_about(self):
+		tkMessageBox.showinfo("About", "Version: 1.0.0\n")
+		
+	def click_submit(self, combobox):
+		if (self.server == ""):
+			tkMessageBox.showerror("Error", "Please load the config file first.\n\nHint: \nFile > Open config file")
+		else:
+			command = self.cmd.get()
+			self.label_cmd.config(text="Command: " + command)
+			self.add_to_cmd_list(command, combobox)
+			
+			# set text in the textbox
+			self.textbox_output.insert(INSERT, command + "...")
 
-root.mainloop()
+	def add_to_cmd_list(self, command, combobox):
+		list_size = len(self.cmd_list)
+		
+		
+		if not(self.cmd_list.count(command)):
+			if (list_size == self.cmd_list_max_size):
+				# remove the 1st command
+				self.cmd_list.pop(0)
+
+			self.cmd_list.append(command)
+			combobox.config(values=self.cmd_list)
+			
+
+# -------------------------------------------------------- #
+# main program                                             #
+# -------------------------------------------------------- #
+root = Tk()
+root.iconbitmap("favicon.ico")
+app = Window(root)
+root.mainloop() 

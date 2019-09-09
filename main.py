@@ -5,6 +5,7 @@ import ttk
 import tkMessageBox
 import tkFileDialog as filedialog
 import ConfigParser as configparser
+import tkFont
 
 class Window(Frame):
 	server = ""
@@ -43,12 +44,12 @@ class Window(Frame):
 		menu = Menu(self.master)
 		self.master.config(menu=menu)
 		
-		# create the file object)
+		# create the file object
 		file = Menu(menu, tearoff=0)
 		file.add_command(label="Open config file", command=self.file_open)
 		file.add_command(label="Exit", command=self.client_exit)
 		
-		# create the file object)
+		# create the file object
 		help = Menu(menu, tearoff=0)
 		help.add_command(label="About", command=self.show_about)
 		
@@ -58,7 +59,7 @@ class Window(Frame):
 		menu.add_cascade(label="Help", menu=help)
 		
 	def init_label(self, frame):
-		self.label_cmd = Label(frame, text="Command: ")
+		self.label_cmd = Label(frame, text="Command: ", fg='navy')
 		self.label_cmd.pack(side=LEFT)
 
 	def init_textbox_output(self, frame):
@@ -73,42 +74,46 @@ class Window(Frame):
 	
 	def init_combobox_cmd(self, frame):
 		self.cmd = StringVar()
-		combobox_cmd = ttk.Combobox(frame, textvariable=self.cmd, values=self.cmd_list)
-		#combobox_cmd["values"] = ("help")
-		combobox_cmd.current(0)
-		combobox_cmd.pack(side=LEFT, fill=X, expand=1, padx=2)
+		self.combobox_cmd = ttk.Combobox(frame, textvariable=self.cmd, values=self.cmd_list)
+		self.combobox_cmd.focus_set()
+		self.combobox_cmd.current(0)
+		self.combobox_cmd.pack(side=LEFT, fill=X, expand=1, padx=2)
 		
-		button_Submit=Button(frame, text="Submit", command=lambda: self.click_submit(combobox_cmd))
+		button_Submit=Button(frame, text="Submit", command=self.click_submit)
 		button_Submit.pack(side=RIGHT, padx=2)
+		
+		self.master.bind('<Return>', self.click_submit)
 		
 	def client_exit(self):
 		exit()
 
 	def file_open(self):
 		self.filename = filedialog.askopenfilename(initialdir = ".",title = "Select file", filetypes=( ("Config file", "*.ini*"),("All types", "*.*")))
-        
-		# read config file
-		config = configparser.ConfigParser()
-		config.read(self.filename)
-
-		self.server = config.get("GENERAL", "SERVER")
-		self.protocol = config.get("GENERAL", "PROTOCOL")
-				
-		#self.server = config["GENERAL"]["SERVER"]
-		#self.protocol = config["GENERAL"]["PROTOCOL"]
-		
-		self.master.title("UR Tool - " + self.server + " (" + self.protocol + ")")
+    
+		if self.filename != "":
+			# read config file
+			config = configparser.ConfigParser()
+			config.read(self.filename)
+    	
+			self.server = config.get("GENERAL", "SERVER")
+			self.protocol = config.get("GENERAL", "PROTOCOL")
+			
+			# Python 3		
+			#self.server = config["GENERAL"]["SERVER"]
+			#self.protocol = config["GENERAL"]["PROTOCOL"]
+			
+			self.master.title("UR Tool - " + self.server + " (" + self.protocol + ")")
 
 	def show_about(self):
 		tkMessageBox.showinfo("About", "Version: 1.0.0\n")
 		
-	def click_submit(self, combobox):
+	def click_submit(self, *args):
 		if (self.server == ""):
 			tkMessageBox.showerror("Error", "Please load the config file first.\n\nHint: \nFile > Open config file")
 		else:
 			command = self.cmd.get()
 			self.label_cmd.config(text="Command: " + command)
-			self.add_to_cmd_list(command, combobox)
+			self.add_to_cmd_list(command, self.combobox_cmd)
 			
 			# set text in the textbox
 			self.textbox_output.insert(INSERT, command + "...")
@@ -125,12 +130,17 @@ class Window(Frame):
 			self.cmd_list.append(command)
 			combobox.config(values=self.cmd_list)
 			
+	def enter(self, *args):
+			print("You hit return")
 
 # -------------------------------------------------------- #
 # main program                                             #
 # -------------------------------------------------------- #
 platform = sys.platform
 root = Tk()
+
+bigfont = tkFont.Font(family="Helvetica",size=11)
+root.option_add("*Font", bigfont)
 
 if platform == "win32":
 	root.iconbitmap("favicon.ico")

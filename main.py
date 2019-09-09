@@ -84,14 +84,17 @@ class Window(Frame):
 		exit()
 
 	def file_open(self):
-		root.filename = filedialog.askopenfilename(initialdir = ".",title = "Select file", filetypes=( ("Config file", "*.ini*"),("All types", "*.*")))
+		self.filename = filedialog.askopenfilename(initialdir = ".",title = "Select file", filetypes=( ("Config file", "*.ini*"),("All types", "*.*")))
         
 		# read config file
 		config = configparser.ConfigParser()
-		config.read(root.filename)
-		
-		self.server = config["GENERAL"]["SERVER"]
-		self.protocol = config["GENERAL"]["PROTOCOL"]
+		config.read(self.filename)
+
+		self.server = config.get("GENERAL", "SERVER")
+		self.protocol = config.get("GENERAL", "PROTOCOL")
+				
+		#self.server = config["GENERAL"]["SERVER"]
+		#self.protocol = config["GENERAL"]["PROTOCOL"]
 		
 		self.master.title("UR Tool - " + self.server + " (" + self.protocol + ")")
 

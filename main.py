@@ -130,9 +130,6 @@ class Window(Frame):
 			self.cmd_list.append(command)
 			combobox.config(values=self.cmd_list)
 			
-	def enter(self, *args):
-			print("You hit return")
-
 # -------------------------------------------------------- #
 # main program                                             #
 # -------------------------------------------------------- #

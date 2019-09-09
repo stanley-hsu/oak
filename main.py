@@ -1,9 +1,9 @@
-# Simple enough, just import everything from tkinter.
-from tkinter import *
-from tkinter import filedialog
-from tkinter import ttk
-import configparser
+# for Python2
+from Tkinter import *
+import ttk
 import tkMessageBox
+import tkFileDialog as filedialog
+import ConfigParser as configparser
 
 class Window(Frame):
 	server = ""

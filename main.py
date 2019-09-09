@@ -1,3 +1,4 @@
+import sys
 # for Python2
 from Tkinter import *
 import ttk
@@ -128,7 +129,11 @@ class Window(Frame):
 # -------------------------------------------------------- #
 # main program                                             #
 # -------------------------------------------------------- #
+platform = sys.platform
 root = Tk()
-root.iconbitmap("favicon.ico")
+
+if platform == "win32":
+	root.iconbitmap("favicon.ico")
+
 app = Window(root)
 root.mainloop() 
